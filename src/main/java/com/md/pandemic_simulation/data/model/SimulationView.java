@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.util.UUID;
 
+
 public interface SimulationView {
 
     UUID getId();

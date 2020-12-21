@@ -18,20 +18,15 @@ class BasicPopulationGeneratorTest {
 
     @Test
     void generate() {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
             Simulation simulation = random();
             basicPopulationGenerator.generate(simulation).forEach(daySummary -> assertAll(() -> {
                 assertTrue(daySummary.getPi() >=0);
-                if(daySummary.getPv() < 0) {
-                    System.out.println(simulation.toString());
-                    System.out.println("ASFASFASFASFSAF " + daySummary.toString());
-                }
-
-
                 assertTrue(daySummary.getPv() >=0);
                 assertTrue(daySummary.getPm() >=0);
                 assertTrue(daySummary.getPr() >=0);
                 assertEquals(daySummary.getPi() + daySummary.getPr() + daySummary.getPm() + daySummary.getPv(), simulation.getP());
+
             }));
 
         }
@@ -45,9 +40,9 @@ class BasicPopulationGeneratorTest {
                 .M(randomIndicator())
                 .R(randomNumber(1,100))
                 .N("test")
-                .Ts(randomNumber(1,50))
-                .Ti(randomNumber(35,58))
-                .Tm(randomNumber(1,20))
+                .Ts(randomNumber(1,5000))
+                .Ti(randomNumber(1,100))
+                .Tm(randomNumber(1,100))
                 .build();
     }
 
