@@ -5,7 +5,7 @@ import com.md.pandemic_simulation.web.dto.CreateSimulationDto;
 import com.md.pandemic_simulation.web.dto.SimulationDetailsDto;
 import com.md.pandemic_simulation.web.service.SimulationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -30,6 +30,7 @@ public class SimulationController {
         return simulationService.getSimulationDetails(id);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping()
     void createSimulation(@Valid @RequestBody CreateSimulationDto simulation) {
         simulationService.createSimulation(simulation);
