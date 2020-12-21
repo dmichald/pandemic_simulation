@@ -3,6 +3,7 @@ package com.md.pandemic_simulation.web.service;
 import com.md.pandemic_simulation.data.model.DaySummary;
 import com.md.pandemic_simulation.data.model.Simulation;
 import com.md.pandemic_simulation.data.model.SimulationView;
+import com.md.pandemic_simulation.data.repository.DaySummaryRepository;
 import com.md.pandemic_simulation.data.repository.SimulationRepository;
 import com.md.pandemic_simulation.web.dto.CreateSimulationDto;
 import com.md.pandemic_simulation.web.dto.SimulationDetailsDto;
@@ -23,12 +24,14 @@ import java.util.UUID;
 public class SimulationServiceImpl implements SimulationService {
 
     private final SimulationRepository simulationRepository;
+    private final DaySummaryRepository daySummaryRepository;
     private final PopulationGenerator populationGenerator;
     private SimulationMapper simulationMapper = Mappers.getMapper(SimulationMapper.class);
     private static final String SIMULATION_NOT_FOUND = "SIMULATION WITH GIVEN ID NOT FOUND. ID: ";
 
-    public SimulationServiceImpl(SimulationRepository simulationRepository, PopulationGenerator populationGenerator) {
+    public SimulationServiceImpl(SimulationRepository simulationRepository, DaySummaryRepository daySummaryRepository, PopulationGenerator populationGenerator) {
         this.simulationRepository = simulationRepository;
+        this.daySummaryRepository = daySummaryRepository;
         this.populationGenerator = populationGenerator;
     }
 
@@ -85,8 +88,7 @@ public class SimulationServiceImpl implements SimulationService {
                 .orElseThrow(() -> new EntityNotFoundException(SIMULATION_NOT_FOUND + id));
         log.info("Found simulation with id: {}", fromDb.getId());
 
-        fromDb.getEpidemicDays().clear();
-        log.info("Removed all days drom simulation with id {}", fromDb.getId());
+        deleteOldEpidemicDays(fromDb);
 
         BeanUtils.copyProperties(simulationDto, fromDb);
         log.info("Updated simulation with id: {}", fromDb.getId());
@@ -96,6 +98,12 @@ public class SimulationServiceImpl implements SimulationService {
 
         fromDb.setEpidemicDays(newDays);
         log.info("Save new data about epidemic days.");
+    }
+
+    @Transactional
+    void deleteOldEpidemicDays(Simulation simulation) {
+        simulation.getEpidemicDays().forEach(daySummary -> daySummaryRepository.deleteById(daySummary.getId()));
+        log.info("Removed all days drom simulation with id {}", simulation.getId());
     }
 
     @Transactional

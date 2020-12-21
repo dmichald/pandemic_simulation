@@ -22,6 +22,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+
+@SmallerThanPopulation
 public class Simulation implements Serializable {
 
     @Id
@@ -45,7 +47,7 @@ public class Simulation implements Serializable {
     /**
      * Initial number of infected people
      */
-    @SmallerThanPopulation
+
     @Min(0)
     private Integer I;
 

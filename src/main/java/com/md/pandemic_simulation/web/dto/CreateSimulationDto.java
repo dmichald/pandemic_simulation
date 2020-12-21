@@ -1,10 +1,14 @@
 package com.md.pandemic_simulation.web.dto;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.*;
 
-@Data
+@NoArgsConstructor
+@Getter
+@Setter
+@EqualsAndHashCode
+@AllArgsConstructor
 public class CreateSimulationDto {
     @NotNull
     @NotEmpty

@@ -5,6 +5,7 @@ import com.md.pandemic_simulation.web.dto.CreateSimulationDto;
 import com.md.pandemic_simulation.web.dto.SimulationDetailsDto;
 import com.md.pandemic_simulation.web.service.SimulationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+
 @RequestMapping("/simulations")
 @RequiredArgsConstructor
 public class SimulationController {
