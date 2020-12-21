@@ -67,13 +67,13 @@ public class Simulation implements Serializable {
     /**
      * Time from infected to recover in days
      */
-    @Min(0)
+    @Min(1)
     private Integer Ti;
 
     /**
      * Time from infected to death in days
      */
-    @Min(0)
+    @Min(1)
     private Integer Tm;
 
     /**
@@ -85,4 +85,18 @@ public class Simulation implements Serializable {
     @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "simulation")
     private List<DaySummary> epidemicDays = new ArrayList<>();
 
+    @Override
+    public String toString() {
+        return "Simulation{" +
+                "id=" + id +
+                ", N='" + N + '\'' +
+                ", P=" + P +
+                ", I=" + I +
+                ", R=" + R +
+                ", M=" + M +
+                ", Ti=" + Ti +
+                ", Tm=" + Tm +
+                ", Ts=" + Ts +
+                '}';
+    }
 }

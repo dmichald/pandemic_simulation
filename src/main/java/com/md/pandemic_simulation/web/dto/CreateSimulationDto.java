@@ -31,10 +31,10 @@ public class CreateSimulationDto {
     @Max(1)
     private Double M;
 
-    @Min(0)
+    @Min(1)
     private Integer Ti;
 
-    @Min(0)
+    @Min(1)
     private Integer Tm;
 
     @Min(0)

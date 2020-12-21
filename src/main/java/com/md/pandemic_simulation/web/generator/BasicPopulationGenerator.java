@@ -13,46 +13,34 @@ import java.util.Map;
 @Component
 public class BasicPopulationGenerator implements PopulationGenerator {
     private Map<DaySummary, DayExtraData> eachDayInformationMap = new HashMap<>();
-
+    private List<DaySummary> days;
+    private Simulation simulation;
     @Override
     public List<DaySummary> generate(Simulation simulation) {
-        return createSimulationDays(simulation);
+        this.days = new ArrayList<>();
+        this.simulation = simulation;
+
+        return createSimulationDays();
     }
 
-    private List<DaySummary> createSimulationDays(Simulation simulation) {
-        List<DaySummary> days = new ArrayList<>();
+    private List<DaySummary> createSimulationDays() {
         days.add(firstDay(simulation));
 
         for (int i = 1; i < simulation.getTs(); i++) {
-              DayExtraData dayExtraData = new DayExtraData();
             DaySummary previous = days.get(i - 1);
-
-            //died
-            int newDied = getDied(i, days, simulation.getTm(), simulation.getM());
-             dayExtraData.setNewDied(newDied);
-
+            int newDied = getDied(i);
             int allDied = previous.getPm() + newDied;
-            //end died
 
-            //healed
-            int newHealed = getNewHealed(i, days, simulation.getTm(), simulation.getTi(), simulation.getM());
+            int newHealed = getNewHealed(i);
             int allHealed = previous.getPr() + newHealed;
-            //end healed
 
-            //INFECTED
-            int newInfected = (previous.getPi() - newDied - newHealed) * simulation.getR();
-            int allInfected = getAllInfected(previous, newDied, newHealed, newInfected);
+            int newInfected = getNewInfected(i, newDied, newHealed);
+            int allInfected = previous.getPi() - newDied - newHealed + newInfected;
 
-
-            //INFECTED
             int healthy = simulation.getP() - allInfected - allDied - allHealed;
 
-              dayExtraData.setNewDied(newDied);
-              dayExtraData.setHealed(newHealed);
-            int newI = previous.getPi() - newDied - newHealed;
-            int dd = Math.min(newI, newInfected);
-            dayExtraData.setNewInfected(dd);
-            DayExtraData extras = new DayExtraData(dd, newDied, newHealed);
+
+            DayExtraData dayExtraData = new DayExtraData(newInfected, newDied, newHealed);
 
             DaySummary daySummary = DaySummary.builder()
                     .day(i)
@@ -67,6 +55,14 @@ public class BasicPopulationGenerator implements PopulationGenerator {
             eachDayInformationMap.put(daySummary, dayExtraData);
         }
         return days;
+    }
+
+    private int getNewInfected(int iteration, int newDied, int newHealed) {
+        DaySummary previous = days.get(iteration - 1);
+        int infected = previous.getPi() - newDied - newHealed;
+        int newInfected = simulation.getR() * infected;
+        int healthyProneToInfection = previous.getPv();
+        return Math.min(newInfected, healthyProneToInfection);
     }
 
     private int getAllInfected(DaySummary previous, int newDied, int newHealed, int newInfected) {
@@ -89,13 +85,16 @@ public class BasicPopulationGenerator implements PopulationGenerator {
     }
 
 
-    private int getDied(int iteration, List<DaySummary> days, int daysToDied, double M) {
+    private int getDied(int iteration) {
+        int daysToDied = simulation.getTm();
+        double M = simulation.getM();
         DaySummary previous = days.get(iteration - 1);
         if (!isAnybodyInfected(previous)) return 0;
         if (mayBeDie(iteration, daysToDied)) {
             DaySummary infectedDay = days.get(iteration - daysToDied);
             int infectedAtThisDay = getInfectedIn(infectedDay);
-            return (int) (M * infectedAtThisDay);
+            int died = (int) (M * infectedAtThisDay);
+            return Math.min(previous.getPi(), died);
         } else {
             return 0;
         }
@@ -105,7 +104,11 @@ public class BasicPopulationGenerator implements PopulationGenerator {
         return currentIteration >= daysFromInfectedToDie;
     }
 
-    private int getNewHealed(int i, List<DaySummary> days, int daysToDied, int daysToHeal, double mortalityIndicator) {
+    private int getNewHealed(int i) {
+        int daysToDied = simulation.getTm();
+        int daysToHeal = simulation.getTi();
+        double mortalityIndicator = simulation.getM();
+
         DaySummary previous = days.get(i - 1);
         if (!isAnybodyInfected(previous)) return 0;
         if (mayBeHealed(i, daysToHeal)) {
@@ -114,7 +117,9 @@ public class BasicPopulationGenerator implements PopulationGenerator {
                 return getInfectedIn(infectedDay);
             } else {
                 int allInfected = getInfectedIn(infectedDay);
-                int died = (int) (allInfected * mortalityIndicator);
+                DaySummary healDay = days.get(infectedDay.getDay() + simulation.getTm());
+
+                int died = eachDayInformationMap.get(healDay).newDied;
                 return allInfected - died;
             }
         } else {
