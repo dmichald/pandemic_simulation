@@ -15,6 +15,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,11 +46,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .map(err -> new ErrorModel(err.getField(), err.getRejectedValue(), err.getDefaultMessage()))
                 .distinct()
                 .collect(Collectors.toList());
-
+        String globalErrorMessage = ex.getGlobalError() == null ? "VALIDATION ERRORS" : ex.getGlobalError().getDefaultMessage();
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .message("VALIDATION ERRORS")
+                .message(globalErrorMessage)
                 .status(BAD_REQUEST.value())
-                .errorMessage(errorMessages)
+                .fieldErrors(errorMessages)
                 .build();
         return new ResponseEntity<>(errorResponse, BAD_REQUEST);
     }
@@ -63,7 +64,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 class ErrorResponse {
     private String message;
     private int status;
-    private List<ErrorModel> errorMessage;
+    @Builder.Default
+    private List<ErrorModel> fieldErrors = new ArrayList<>();
 }
 
 @Data
@@ -74,3 +76,4 @@ class ErrorModel {
     private Object rejectedValue;
     private String messageError;
 }
+

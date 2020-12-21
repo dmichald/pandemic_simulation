@@ -1,6 +1,5 @@
 package com.md.pandemic_simulation.data.model;
 
-import com.md.pandemic_simulation.web.validators.SmallerThanPopulation;
 import lombok.*;
 
 import javax.persistence.*;
@@ -23,7 +22,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode
 
-@SmallerThanPopulation
+
 public class Simulation implements Serializable {
 
     @Id

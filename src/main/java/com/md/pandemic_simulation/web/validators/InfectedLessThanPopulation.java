@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Constraint(validatedBy = SmallerThanPopulationValidator.class)
 @Documented
-public @interface SmallerThanPopulation {
+public @interface InfectedLessThanPopulation {
     String message() default "Initial number of infected people must be smaller than population";
 
     Class<?>[] groups() default {};

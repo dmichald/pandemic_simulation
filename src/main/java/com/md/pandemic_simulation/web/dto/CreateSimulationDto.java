@@ -1,5 +1,6 @@
 package com.md.pandemic_simulation.web.dto;
 
+import com.md.pandemic_simulation.web.validators.InfectedLessThanPopulation;
 import lombok.*;
 
 import javax.validation.constraints.*;
@@ -9,6 +10,8 @@ import javax.validation.constraints.*;
 @Setter
 @EqualsAndHashCode
 @AllArgsConstructor
+
+@InfectedLessThanPopulation
 public class CreateSimulationDto {
     @NotNull
     @NotEmpty
