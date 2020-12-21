@@ -6,6 +6,10 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * @author Michal Dyngosz
+ * This class contains information about each single day in epidemic.
+ */
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
@@ -18,11 +22,31 @@ public class DaySummary implements Serializable {
     @Id
     @GeneratedValue
     UUID id;
+    /**
+     * Day od epidemic. Starts from 0
+     */
     private Integer day;
-    private Integer Pi; // number of infected people
-    private Integer Pv; // number of health people, but prone to infections
-    private Integer Pm; // number of dead people
-    private Integer Pr; // number of recovery people with immunity
+
+    /**
+     * Amount of infected people
+     */
+    private Integer Pi;
+
+    /**
+     * Amount of health people, but prone to infection
+     */
+    private Integer Pv;
+
+    /**
+     * Amount of dead people
+     */
+    private Integer Pm;
+
+    /**
+     * Amount of recovery people with earned immunity
+     */
+    private Integer Pr;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "simulation_id")

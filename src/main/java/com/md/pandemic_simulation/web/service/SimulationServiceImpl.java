@@ -2,175 +2,118 @@ package com.md.pandemic_simulation.web.service;
 
 import com.md.pandemic_simulation.data.model.DaySummary;
 import com.md.pandemic_simulation.data.model.Simulation;
-import com.md.pandemic_simulation.data.model.SimulationName;
+import com.md.pandemic_simulation.data.model.SimulationView;
+import com.md.pandemic_simulation.data.repository.SimulationRepository;
 import com.md.pandemic_simulation.web.dto.CreateSimulationDto;
-import lombok.*;
+import com.md.pandemic_simulation.web.dto.SimulationDetailsDto;
+import com.md.pandemic_simulation.web.generator.PopulationGenerator;
+import com.md.pandemic_simulation.web.mapper.SimulationMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.factory.Mappers;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class SimulationServiceImpl implements SimulationService {
-    private Map<DaySummary, DayExtraData> extraDataMap = new HashMap<>();
-    //  private final SimulationRepository simulationRepository;
-    //   private final DaySummaryRepository daySummaryRepository;
 
+    private final SimulationRepository simulationRepository;
+    private final PopulationGenerator populationGenerator;
+    private SimulationMapper simulationMapper = Mappers.getMapper(SimulationMapper.class);
+    private static final String SIMULATION_NOT_FOUND = "SIMULATION WITH GIVEN ID NOT FOUND. ID: ";
+
+    public SimulationServiceImpl(SimulationRepository simulationRepository, PopulationGenerator populationGenerator) {
+        this.simulationRepository = simulationRepository;
+        this.populationGenerator = populationGenerator;
+    }
+
+    @Transactional
     @Override
     public void createSimulation(CreateSimulationDto simulationDto) {
-        Simulation createdSimulation = simulation(simulationDto);
-
-    }
-
-    private Simulation simulation(CreateSimulationDto simulationDto) {
-        return Simulation.builder()
-                .N(simulationDto.getName())
-                .P(simulationDto.getPopulation())
-                .I(simulationDto.getAmountOfInfectedPeople())
-                .R(simulationDto.getRIndicator())
-                .M(simulationDto.getMortalityIndicator())
-                .Ti(simulationDto.getDaysFromInfectedToRecover())
-                .Tm(simulationDto.getDaysFromInfectedToDie())
-                .Ts(simulationDto.getSimulationDurationInDays())
-                .build();
-    }
-
-    public static void main(String[] args) {
-        SimulationServiceImpl simulationService = new SimulationServiceImpl();
+        // Simulation createdSimulation = simulation(simulationDto);
         Simulation simulation = Simulation.builder()
-                .N("moja symulacja")
                 .P(100)
                 .I(20)
+                .M(0.5)
                 .R(1)
-                .M(0.0)
+                .N("moja")
+                .Ts(10)
                 .Ti(2)
                 .Tm(1)
-                .Ts(58)
                 .build();
-        simulationService.createSimulationDays(simulation);
-
+        List<DaySummary> daysOfEpidemic = populationGenerator.generate(simulation);
+        simulation.setEpidemicDays(daysOfEpidemic);
+        Simulation saved = simulationRepository.save(simulation);
+        log.info("Saved simulation with id: {}", saved.getId());
     }
 
-    void createSimulationDays(Simulation simulation) {
-        List<DaySummary> days = new ArrayList<>();
-        days.add(firstDay(simulation));
 
-        for (int i = 1; i < simulation.getTs(); i++) {
-            DayExtraData dayExtraData = new DayExtraData();
-            DaySummary previous = days.get(i - 1);
 
-            //died
-            int newDied = getDied(i, days, simulation.getTm(), simulation.getM());
-            dayExtraData.setNewDied(newDied);
-
-            int allDied = previous.getPm() + newDied;
-            //end died
-
-            //healed
-            int newHealed = getNewHealed(i, days, simulation.getTm(), simulation.getTi(), simulation.getM());
-            int allHealed = previous.getPr() + newHealed;
-            //end healed
-
-            //INFECTED
-            int newInfected = (previous.getPi() - newDied - newHealed) * simulation.getR();
-            int allInfected = previous.getPi() - newDied - newHealed + newInfected;
-            int correctInfected;
-            if (allInfected >= previous.getPv()) {
-                correctInfected = previous.getPv();
-            } else if(allInfected <= 0){
-                //trim
-                correctInfected = 0;
-            }else {
-                correctInfected = allInfected;
-            }
-            //INFECTED
-            int healthy = simulation.getP() - correctInfected - allDied - allHealed;
-
-            dayExtraData.setNewDied(newDied);
-            dayExtraData.setHealed(newHealed);
-            int a = previous.getPi() - newDied - newHealed;
-            int dd = Math.min(a, newInfected);
-            dayExtraData.setNewInfected(dd);
-
-            DaySummary daySummary = DaySummary.builder()
-                    .day(i)
-                    .Pi(correctInfected)
-                    .Pv(healthy)
-                    .Pm(allDied)
-                    .Pr(allHealed)
-                    .build();
-
-            days.add(daySummary);
-            extraDataMap.put(daySummary, dayExtraData);
-        }
-
-        days.forEach(daySummary -> System.out.println(daySummary.toString()));
-        days.forEach(daySummary -> System.out.println(daySummary.getPv() + daySummary.getPi() + daySummary.getPm() + daySummary.getPr()));
-        extraDataMap.values().forEach(System.out::println);
-    }
-
-    int getDied(int iteration, List<DaySummary> days, int daysToDied, double M) {
-        DaySummary previous = days.get(iteration -1);
-        if(previous.getPi() == 0) return 0;
-        if (iteration >= daysToDied) {
-            DaySummary infectedDay = days.get(iteration - daysToDied );
-            int infectedAtThisDay = extraDataMap.get(infectedDay).getNewInfected();
-            return (int) (M * infectedAtThisDay);
-        } else {
-            return 0;
-        }
-    }
-
-    int getNewHealed(int i, List<DaySummary> days, int daysToDied, int daysToHeal, double M) {
-        DaySummary previous = days.get(i -1);
-        if(previous.getPi() == 0) return 0;
-        if (i >= daysToHeal) {
-            DaySummary infectedDay = days.get(i - daysToHeal );
-            if (daysToHeal < daysToDied) {
-                return extraDataMap.get(infectedDay).getNewInfected();
-            } else {
-                int allInfected = extraDataMap.get(infectedDay).getNewInfected();
-                int died = (int) (allInfected * M);
-                return allInfected - died;
-            }
-        } else {
-            return 0;
-        }
-    }
-
-    private DaySummary firstDay(Simulation simulation) {
-
-        DaySummary first = DaySummary.builder()
-                .Pi(simulation.getI())
-                .Pv(simulation.getP() - simulation.getI())
-                .Pm(0)
-                .Pr(0)
-                .day(0)
+/*    public static void main(String[] args) {
+        PopulationGenerator populationGenerator = new BasicPopulationGenerator();
+        Simulation simulation = Simulation.builder()
+                .P(100)
+                .I(20)
+                .M(0.5)
+                .R(1)
+                .N("moja")
+                .Ts(10)
+                .Ti(2)
+                .Tm(1)
                 .build();
-        DayExtraData dayExtraData = new DayExtraData(first.getPi(), first.getPm(), first.getPr());
-        extraDataMap.put(first, dayExtraData);
-        return first;
+        List<DaySummary> days = populationGenerator.generate(simulation);
+        days.forEach(System.out::println);
+    }*/
+
+
+    @Override
+    public List<SimulationView> getSimulations() {
+        List<SimulationView> simulations = simulationRepository.findAllBy();
+        log.info("Returned {} simulations", simulations.size());
+        return simulations;
+    }
+
+    @Transactional
+    @Override
+    public void updateSimulation(UUID id, CreateSimulationDto simulationDto) {
+        Simulation fromDb = simulationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(SIMULATION_NOT_FOUND + id));
+        log.info("Found simulation with id: {}", fromDb.getId());
+
+        fromDb.getEpidemicDays().clear();
+        log.info("Removed all days drom simulation with id {}", fromDb.getId());
+
+        BeanUtils.copyProperties(simulationDto, fromDb);
+        log.info("Updated simulation with id: {}", fromDb.getId());
+
+        var newDays = populationGenerator.generate(fromDb);
+        log.info("Generate new data about epidemic days");
+
+        fromDb.setEpidemicDays(newDays);
+        log.info("Save new data about epidemic days.");
+    }
+
+    @Transactional
+    @Override
+    public void removeSimulation(UUID id) {
+        simulationRepository.deleteById(id);
+        log.info("Deleted simulation with id: {}", id);
     }
 
     @Override
-    public SimulationName getSimulations() {
-        return null;
+    public SimulationDetailsDto getSimulationDetails(UUID id) {
+        SimulationDetailsDto simulationFromDB = simulationRepository.findById(id)
+                .map(simulation -> simulationMapper.mapToSimulationDetailsDto(simulation))
+                .orElseThrow(() -> new EntityNotFoundException(SIMULATION_NOT_FOUND + id));
+
+        log.info("Found simulation with id: {}", simulationFromDB.getId());
+
+        return simulationFromDB;
     }
 
-    @EqualsAndHashCode
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    @ToString
-    class DayExtraData {
-        int newInfected;
-        int newDied;
-        int healed;
-    }
 }

@@ -6,10 +6,15 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+
+/**
+ * @author Michal Dyngosz
+ * Class contains information about simulation.
+ */
 @Entity
 @Getter
 @Setter
@@ -23,32 +28,60 @@ public class Simulation implements Serializable {
     @GeneratedValue
     UUID id;
 
+    /**
+     * Simulation name
+     */
     @NotNull
     @NotEmpty
     @NotBlank
-    private String N; //name
-    @Min(0)
-    private Integer P;   //population
+    private String N;
 
-    @SmallerThanPopulation()
-    @Min(0)   //initial number of infected people
+    /**
+     * Amount of people in population
+     */
+    @Min(0)
+    private Integer P;
+
+    /**
+     * Initial number of infected people
+     */
+    @SmallerThanPopulation
+    @Min(0)
     private Integer I;
 
-    @Min(0)
-    private Integer R; //R indicator
 
-    @Min(0) @Max(1) //mortality indicator
+    /**
+     * Indicator - points how many people can be infected by one infected person
+     */
+    @Min(0)
+    private Integer R;
+
+    /**
+     * Mortality indicator - points how many infected people die
+     */
+    @Min(0)
+    @Max(1)
     private Double M;
-    @Min(0)
-    private Integer Ti;  //elapsed days from infected to recover
 
+    /**
+     * Time from infected to recover in days
+     */
     @Min(0)
-    private Integer Tm; //elapsed days from infected to death
+    private Integer Ti;
 
+    /**
+     * Time from infected to death in days
+     */
     @Min(0)
-    private Integer Ts; //simulation duration in days
+    private Integer Tm;
 
-    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "simulation")
-    private Set<DaySummary> epidemicDays = new HashSet<>();
+    /**
+     * Simulation duration in days
+     */
+    @Min(0)
+    private Integer Ts;
+
+    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "simulation")
+    private List<DaySummary> epidemicDays = new ArrayList<>();
 
 }
