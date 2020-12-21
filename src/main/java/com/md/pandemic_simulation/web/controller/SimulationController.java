@@ -22,6 +22,7 @@ public class SimulationController {
         return simulationService.getSimulations();
     }
 
+
     @GetMapping("/{id}")
     SimulationDetailsDto getSimulationDetails(@PathVariable UUID id) {
         return simulationService.getSimulationDetails(id);
