@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class BasicPopulationGenerator implements PopulationGenerator {
+public class BasicGenerator implements PopulationGenerator {
     private Map<DaySummary, DayExtraData> eachDayInformationMap = new HashMap<>();
     private List<DaySummary> days;
     private Simulation simulation;
@@ -60,7 +60,7 @@ public class BasicPopulationGenerator implements PopulationGenerator {
 
     private int getDied(int iteration) {
         DaySummary previous = days.get(iteration - 1);
-        if (!isAnybodyInfected(previous) || fasterHealThanDie(simulation.getTi(), simulation.getTm())) return 0;
+        if (fasterHealThanDie(simulation.getTi(), simulation.getTm())) return 0;
         int daysToDied = simulation.getTm();
         double mortalityIndicator = simulation.getM();
 
@@ -69,9 +69,8 @@ public class BasicPopulationGenerator implements PopulationGenerator {
             int infectedAtThisDay = getInfectedIn(infectedDay);
             int died = (int) (mortalityIndicator * infectedAtThisDay);
             return Math.min(previous.getPi(), died);
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     private boolean mayBeDie(int currentIteration, int daysFromInfectedToDie) {
@@ -82,8 +81,6 @@ public class BasicPopulationGenerator implements PopulationGenerator {
         int daysToDied = simulation.getTm();
         int daysToHeal = simulation.getTi();
 
-        DaySummary previous = days.get(i - 1);
-    //    if (!isAnybodyInfected(previous)) return 0;
         if (mayBeHealed(i, daysToHeal)) {
             DaySummary infectedDay = days.get(i - daysToHeal);
             if (fasterHealThanDie(daysToHeal, daysToDied)) {
@@ -93,18 +90,13 @@ public class BasicPopulationGenerator implements PopulationGenerator {
                 if (daysToHeal == daysToDied) {
                     return allInfected - newDied;
                 }
-                DaySummary healingDay = days.get(infectedDay.getDay() + simulation.getTm());
 
+                DaySummary healingDay = days.get(infectedDay.getDay() + simulation.getTm());
                 int died = eachDayInformationMap.get(healingDay).getNewDied();
                 return allInfected - died;
             }
-        } else {
-            return 0;
         }
-    }
-
-    private boolean isAnybodyInfected(DaySummary previous) {
-        return previous.getPi() != 0;
+        return 0;
     }
 
     private boolean mayBeHealed(int currentIteration, int daysFromInfectedToHeal) {

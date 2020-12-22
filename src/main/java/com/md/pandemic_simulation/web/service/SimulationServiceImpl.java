@@ -38,40 +38,13 @@ public class SimulationServiceImpl implements SimulationService {
     @Transactional
     @Override
     public void createSimulation(CreateSimulationDto simulationDto) {
-        // Simulation createdSimulation = simulation(simulationDto);
-        Simulation simulation = Simulation.builder()
-                .P(100)
-                .I(20)
-                .M(0.5)
-                .R(1)
-                .N("moja")
-                .Ts(10)
-                .Ti(2)
-                .Tm(1)
-                .build();
+        Simulation simulation = simulationMapper.mapToSimulation(simulationDto);
         List<DaySummary> daysOfEpidemic = populationGenerator.generate(simulation);
+        log.info("Generated course of epidemic for simulation.");
         simulation.setEpidemicDays(daysOfEpidemic);
         Simulation saved = simulationRepository.save(simulation);
         log.info("Saved simulation with id: {}", saved.getId());
     }
-
-
-
-/*    public static void main(String[] args) {
-        PopulationGenerator populationGenerator = new BasicPopulationGenerator();
-        Simulation simulation = Simulation.builder()
-                .P(100)
-                .I(20)
-                .M(0.5)
-                .R(1)
-                .N("moja")
-                .Ts(10)
-                .Ti(2)
-                .Tm(1)
-                .build();
-        List<DaySummary> days = populationGenerator.generate(simulation);
-        days.forEach(System.out::println);
-    }*/
 
 
     @Override
@@ -100,8 +73,8 @@ public class SimulationServiceImpl implements SimulationService {
         log.info("Save new data about epidemic days.");
     }
 
-    @Transactional
-    void deleteOldEpidemicDays(Simulation simulation) {
+
+    private void deleteOldEpidemicDays(Simulation simulation) {
         simulation.getEpidemicDays().forEach(daySummary -> daySummaryRepository.deleteById(daySummary.getId()));
         log.info("Removed all days drom simulation with id {}", simulation.getId());
     }
@@ -109,7 +82,10 @@ public class SimulationServiceImpl implements SimulationService {
     @Transactional
     @Override
     public void removeSimulation(UUID id) {
-        simulationRepository.deleteById(id);
+        Simulation simulation = simulationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(SIMULATION_NOT_FOUND + id));
+        log.info("Found simulation with id: {}", id);
+        simulationRepository.delete(simulation);
         log.info("Deleted simulation with id: {}", id);
     }
 
@@ -123,5 +99,4 @@ public class SimulationServiceImpl implements SimulationService {
 
         return simulationFromDB;
     }
-
 }

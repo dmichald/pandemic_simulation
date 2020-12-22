@@ -4,16 +4,15 @@ import com.md.pandemic_simulation.data.model.Simulation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.text.DecimalFormat;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class BasicPopulationGeneratorTest {
-    BasicPopulationGenerator basicPopulationGenerator;
+class BasicGeneratorTest {
+   private BasicGenerator basicPopulationGenerator;
     @BeforeEach
     void setUp() {
-        basicPopulationGenerator = new BasicPopulationGenerator();
+        basicPopulationGenerator = new BasicGenerator();
     }
 
     @Test
@@ -51,7 +50,6 @@ class BasicPopulationGeneratorTest {
     }
 
     private double randomIndicator() {
-        double numb = ThreadLocalRandom.current().nextDouble(0, 1);
-        return numb;
+        return ThreadLocalRandom.current().nextDouble(0, 1);
     }
 }
