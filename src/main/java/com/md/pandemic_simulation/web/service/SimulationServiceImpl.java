@@ -2,11 +2,11 @@ package com.md.pandemic_simulation.web.service;
 
 import com.md.pandemic_simulation.data.model.DaySummary;
 import com.md.pandemic_simulation.data.model.Simulation;
-import com.md.pandemic_simulation.data.model.SimulationView;
 import com.md.pandemic_simulation.data.repository.DaySummaryRepository;
 import com.md.pandemic_simulation.data.repository.SimulationRepository;
 import com.md.pandemic_simulation.web.dto.CreateSimulationDto;
 import com.md.pandemic_simulation.web.dto.SimulationDetailsDto;
+import com.md.pandemic_simulation.web.dto.SimulationDto;
 import com.md.pandemic_simulation.web.generator.PopulationGenerator;
 import com.md.pandemic_simulation.web.mapper.SimulationMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -48,8 +49,11 @@ public class SimulationServiceImpl implements SimulationService {
 
 
     @Override
-    public List<SimulationView> getSimulations() {
-        List<SimulationView> simulations = simulationRepository.findAllBy();
+    public List<SimulationDto> getSimulations() {
+        List<SimulationDto> simulations = simulationRepository.findAll()
+                .stream()
+                .map(simulation -> simulationMapper.mapToSimulationDto(simulation))
+                .collect(Collectors.toList());
         log.info("Returned {} simulations", simulations.size());
         return simulations;
     }

@@ -1,8 +1,8 @@
 package com.md.pandemic_simulation.web.controller;
 
-import com.md.pandemic_simulation.data.model.SimulationView;
 import com.md.pandemic_simulation.web.dto.CreateSimulationDto;
 import com.md.pandemic_simulation.web.dto.SimulationDetailsDto;
+import com.md.pandemic_simulation.web.dto.SimulationDto;
 import com.md.pandemic_simulation.web.service.SimulationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ public class SimulationController {
     private final SimulationService simulationService;
 
     @GetMapping
-    List<SimulationView> getAllSimulations() {
+    List<SimulationDto> getAllSimulations() {
         return simulationService.getSimulations();
     }
 
